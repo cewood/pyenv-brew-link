@@ -1,0 +1,49 @@
+#!/bin/bash
+set -eu
+
+pyenv-brew-link() {
+    # Check homebrew is present
+    if ! type brew &>/dev/null
+    then
+        echo "Homebrew not found, exiting."
+        exit 0
+    fi
+
+    # Check there are any homebrew python installs
+    python_brews=($(brew --cellar)/python*)
+    if [ ! -e $python_brews ]
+    then
+        echo "No python brew installs found, exiting."
+        exit 0
+    fi
+
+    # Create the versions folder if it doesn't exists,
+    #   else remove the *-brew versions if any exist
+    if [ ! -d $PYENV_ROOT/versions ]
+    then
+        mkdir $PYENV_ROOT/versions
+    else
+        rm -f $PYENV_ROOT/versions/*-brew
+    fi
+
+    # Link the homebrew pythons
+    for version in $python_brews ; do
+        folders=($version/*)
+
+        for (( i=0; i<${#folders[@]}; i++ )); do
+            item=${folders[$i]}
+            ln -v -s $item "$PYENV_ROOT/versions/${item##/*/}-brew"
+
+            # If this is the last folder, create major.minor link
+            if [[ "$i" -eq "${#folders[@]} - 1" ]]
+            then
+                ln -v -s $item "$PYENV_ROOT/versions/${version##*@}-brew"
+            fi
+        done
+    done
+
+    # Rehash pyenv versions
+    pyenv rehash
+}
+
+pyenv-brew-link

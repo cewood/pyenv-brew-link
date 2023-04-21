@@ -1,0 +1,12 @@
+#!/bin/bash
+set -eu
+
+pyenv-brew-unlink() {
+    # Remove the *-brew versions if any exist
+    rm -f $PYENV_ROOT/versions/*-brew
+
+    # Rehash pyenv versions
+    pyenv rehash
+}
+
+pyenv-brew-unlink
